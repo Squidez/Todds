@@ -5,23 +5,121 @@ kaplay({
 
 });
 
-loadSprite("dice1", "assets/dice1.png");
-loadSprite("dice2", "assets/dice2.png");
-loadSprite("dice3", "assets/dice3.png");
-loadSprite("dice4", "assets/dice4.png");
-loadSprite("dice5", "assets/dice5.png");
-loadSprite("dice6", "assets/dice6.png");
-loadSprite('dice_anim', 'assets/anim_test.png', {
-    sliceX : 6,
-    anims :{
-    'idle' : 3,
-    'throw' :{
-        from: 0,
-        to: 5,
-        speed:25,
-        loop:false
-    }}
+loadSprite("dice1", "assets/dice_sprites.png", {
+    sliceX: 12,
+    sliceY: 6,
+    anims: {
+        'unselected' : 5,
+        'throw' : {
+            from : 0,
+            to : 5,
+            speed : 12,
+            loop : false,
+        },
+        'selected' : {
+            from : 6,
+            to : 11,
+            speed : 12,
+            loop : true,
+        }
+    }
 });
+loadSprite("dice2", "assets/dice_sprites.png", {
+    sliceX: 12,
+    sliceY: 6,
+    anims: {
+        'unselected' : 17,
+        'throw' : {
+            from : 12,
+            to : 17,
+            speed : 12,
+            loop : false,
+        },
+        'selected' : {
+            from : 17,
+            to : 23,
+            speed : 12,
+            loop : true,
+        }
+    }
+});
+loadSprite("dice3", "assets/dice_sprites.png", {
+    sliceX: 12,
+    sliceY: 6,
+    anims: {
+        'unselected' : 29,
+        'throw' : {
+            from : 24,
+            to : 29,
+            speed : 12,
+            loop : false,
+        },
+        'selected' : {
+            from : 30,
+            to : 35,
+            speed : 12,
+            loop : true,
+        }
+    }
+});
+loadSprite("dice4", "assets/dice_sprites.png", {
+    sliceX: 12,
+    sliceY: 6,
+    anims: {
+        'unselected' : 41,
+        'throw' : {
+            from : 36,
+            to : 41,
+            speed : 12,
+            loop : false,
+        },
+        'selected' : {
+            from : 42,
+            to : 47,
+            speed : 12,
+            loop : true,
+        }
+    }
+});
+loadSprite("dice5", "assets/dice_sprites.png", {
+    sliceX: 12,
+    sliceY: 6,
+    anims: {
+        'unselected' : 53,
+        'throw' : {
+            from : 48,
+            to : 53,
+            speed : 12,
+            loop : false,
+        },
+        'selected' : {
+            from : 54,
+            to : 59,
+            speed : 12,
+            loop : true,
+        }
+    }
+});
+loadSprite("dice6", "assets/dice_sprites.png", {
+    sliceX: 12,
+    sliceY: 6,
+    anims: {
+        'unselected' : 65,
+        'throw' : {
+            from : 60,
+            to : 65,
+            speed : 12,
+            loop : false,
+        },
+        'selected' : {
+            from : 66,
+            to : 71,
+            speed : 12,
+            loop : true,
+        }
+    }
+});
+
 
 let round = 1;
 let max_round = 3;
@@ -83,46 +181,32 @@ function create_dice(n_face, pos_x, pos_y) {
     sprites = ['dice1','dice2','dice3','dice4','dice5','dice6']
     
     const dice = add([
-    
-        // rect(64, 64),
-        // outline(2),
+        
+        sprite(sprites[dice_value],
+            {anim: 'throw'}),
         pos(pos_x,pos_y),
         area(),
         anchor("center"),
         { value: dice_value},
-        sprite(sprites[dice_value],
-            {fill: true}),
+        scale(2.8),
         'dice',
         'unselected',
     ])
 
     // dice.add([
-    //     sprite('dice_anim', {
-    //         anim: 'throw',
-    //     }),
-    //     anchor('center')
-    // ])
-
-    // dice.add([
     //     text(dice.value),
     //     // anchor('center'),
-    //     color(0,0,0)
+    //     color(0,0,0),
     // ])
 
     dice.onHoverUpdate(() => {
         const t = time();
-        dice.scale = vec2(1+ (t%1)/10)
+        dice.scale = vec2(2.8 + (t%1)/10)
         setCursor("pointer");
     });
 
     dice.onHoverEnd(()=>{
-        dice.scale = vec2(1)
-        {if (dice.is('selected')) {
-            dice.outline = 4
-            dice.color = rgb(165, 243, 239)
-        } else {
-            dice.color = rgb()
-        }}
+        dice.scale = vec2(2.8)
     })
 }
 
@@ -131,18 +215,17 @@ function switch_status(dice) {
     if (dice.is('unselected')) {
         dice.tag('selected')
         dice.untag('unselected')
+        dice.play('selected')
     } else {
         dice.tag('unselected')
         dice.untag('selected')
+        dice.play('unselected')
     }
 }
 
 onClick('dice', (dice) => 
-    {if (dice.is('unselected')) {
-        switch_status(dice)
-    } else {
-        switch_status(dice)
-    }})
+    switch_status(dice)
+    )
 
 function throw_dice() {
 

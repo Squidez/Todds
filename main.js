@@ -120,13 +120,40 @@ loadSprite("dice6", "assets/dice_sprites.png", {
     }
 });
 
-
 let round = 1;
 let max_round = 3;
 
 onUpdate(() => setCursor("default"));
 
-function addButton(
+
+
+function check_combi(dice_values) {
+
+    const counts = {};
+  
+    // Count occurrences of each number
+    for (const value of dice_values) {
+        counts[value] = (counts[value] || 0) + 1;
+    }
+    
+    const frequencies = Object.values(counts);
+    // Sort frequencies for easier pattern matching
+    frequencies.sort((a, b) => b - a);
+  
+    // Identify patterns
+    if (frequencies[0] === 5) return 'un Yahtzeeee !!';
+    if (frequencies[0] === 4) return 'un Carré';
+    if (frequencies[0] === 3 && frequencies[1] === 2) return 'un Full';
+    if (frequencies[0] === 3) return 'un Brelan';
+    if (frequencies[0] === 2 && frequencies[1] === 2) return 'Deux Paire';
+    if (frequencies[0] === 2) return 'une Paire';
+  
+    return 'une Suite ?';
+}
+
+scene('dice_phase', ()=>{
+
+    function addButton(
     txt = "start game",
     p = vec2(200, 100),
     f = () => debug.log("hello"),
@@ -140,6 +167,7 @@ function addButton(
         anchor("center"),
         outline(4),
         color(255, 255, 255),
+        'throw_btn'
     ]);
 
     // add a child object that displays the text
@@ -171,8 +199,6 @@ function addButton(
         throw_dice()
     }
     );
-
-    // return btn;
 }
 
 function create_dice(n_face, pos_x, pos_y) {
@@ -223,9 +249,9 @@ function switch_status(dice) {
     }
 }
 
-onClick('dice', (dice) => 
-    switch_status(dice)
-    )
+// onClick('dice', (dice) => 
+//     switch_status(dice)
+//     )
 
 function throw_dice() {
 
@@ -269,45 +295,50 @@ function throw_dice() {
         text('Oh tu as ' + combi),
         'info_txt'
     ]);
-
     
     const round_txt = add([
         pos(420, 500),
-        text(round + '/3'),
+        text(round + '/' + max_round),
         'info_txt'
     ])
 
-    if (round / max_round == 1) {
-        return round = 1;
+    if (round == max_round) {
+
+        setTimeout(() => {
+            go('buy_phase')
+        }, 1200);
+        
     } else {
         return round += 1;
     }
 
 }
 
-function check_combi(dice_values) {
+    // Adds the buttons with the function we added
+    addButton("Lance les Dés !", vec2(220, 500));
+    onUpdate(() => setCursor("default"));
+    onClick('dice', (dice) => 
+    switch_status(dice)
+    )
+})
 
-    const counts = {};
-  
-    // Count occurrences of each number
-    for (const value of dice_values) {
-        counts[value] = (counts[value] || 0) + 1;
-    }
-    
-    const frequencies = Object.values(counts);
-    // Sort frequencies for easier pattern matching
-    frequencies.sort((a, b) => b - a);
-  
-    // Identify patterns
-    if (frequencies[0] === 5) return 'un Yahtzeeee !!';
-    if (frequencies[0] === 4) return 'un Carré';
-    if (frequencies[0] === 3 && frequencies[1] === 2) return 'un Full';
-    if (frequencies[0] === 3) return 'un Brelan';
-    if (frequencies[0] === 2 && frequencies[1] === 2) return 'Deux Paire';
-    if (frequencies[0] === 2) return 'une Paire';
-  
-    return 'une Suite ?';
-}
+scene('buy_phase', ()=>{
 
-// Adds the buttons with the function we added
-addButton("Lance les Dés !", vec2(220, 500));
+    const choice_01 = add([
+        rect(300,500),
+        pos(80,10),
+        color(80,10,80),
+        area(),
+        'choice_01'
+    ]);
+    const choice_02 = add([
+        rect(300,500),
+        pos(390,10),
+        color(180,80,180),
+        area(),
+        'choice_02'        
+    ])
+    console.log('ACHETE !');
+})
+
+go('dice_phase')

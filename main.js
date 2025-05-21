@@ -120,12 +120,12 @@ loadSprite("dice6", "assets/dice_sprites.png", {
     }
 });
 
+let level = 1;
 let round = 1;
 let max_round = 3;
+let max_dice = 5;
 
 onUpdate(() => setCursor("default"));
-
-
 
 function check_combi(dice_values) {
 
@@ -141,24 +141,23 @@ function check_combi(dice_values) {
     frequencies.sort((a, b) => b - a);
   
     // Identify patterns
-    if (frequencies[0] === 5) return 'un Yahtzeeee !!';
-    if (frequencies[0] === 4) return 'un Carré';
-    if (frequencies[0] === 3 && frequencies[1] === 2) return 'un Full';
-    if (frequencies[0] === 3) return 'un Brelan';
-    if (frequencies[0] === 2 && frequencies[1] === 2) return 'Deux Paire';
-    if (frequencies[0] === 2) return 'une Paire';
+    if (frequencies[0] === 6) return 6;
+    if (frequencies[0] === 5) return 5;
+    if (frequencies[0] === 4) return 4;
+    // if (frequencies[0] === 3 && frequencies[1] === 2) return 'un Full';
+    if (frequencies[0] === 3) return 3;
+    // if (frequencies[0] === 2 && frequencies[1] === 2) return 'Deux Paire';
+    if (frequencies[0] === 2) return 2;
   
-    return 'une Suite ?';
+    return 'aucun';
 }
 
-scene('dice_phase', ()=>{
-
-    function addButton(
+function addButton(
     txt = "start game",
     p = vec2(200, 100),
-    f = () => debug.log("hello"),
-) {
-    // add a parent background object
+    call_fct){
+    
+        // add a parent background object
     const btn = add([
         rect(320, 80, { radius: 8 }),
         pos(p),
@@ -196,9 +195,68 @@ scene('dice_phase', ()=>{
     // onClick() comes from area() component
     // it runs once when the object is clicked
     btn.onClick(()=>{
-        throw_dice()
+        call_fct()
     }
     );
+}
+
+function throw_dice() {
+
+    if (round <= max_round){
+
+        get('info_txt').forEach(txt => {
+                destroy(txt)
+            })
+
+        if (get('dice').length == 0) {
+
+            for (let i = 1; i <= max_dice; i++) {
+            
+                dice = create_dice(6, i*80,100);
+            
+            }
+        } else {
+
+            const selected_dices = get('selected');
+        
+            let dice_pos = [];
+            selected_dices.forEach(dice => {
+            
+                dice_pos.push(dice.pos)
+                destroy(dice)
+            });
+        
+            dice_pos.forEach(p => {
+                create_dice(6, p.x, p.y)
+            });
+        }
+
+        const current_dices = get('dice');
+        const current_values = [];
+        current_dices.forEach(dice => {current_values.push(dice.value)
+        });
+
+        combi = check_combi(current_values);
+
+        const current_combi = add([
+            pos(280,420),
+            anchor('left'),
+            text(`Combinaison : ${combi}`),
+            'info_txt'
+        ]);
+
+        const round_txt = add([
+            pos(60,420),
+            anchor('left'),
+            text(`Lancer ${round}/${max_round}`),
+            'info_txt'
+        ])
+
+        return round+=1
+    } else {
+
+        debug.log('plus de lancer')
+    }
 }
 
 function create_dice(n_face, pos_x, pos_y) {
@@ -219,12 +277,6 @@ function create_dice(n_face, pos_x, pos_y) {
         'unselected',
     ])
 
-    // dice.add([
-    //     text(dice.value),
-    //     // anchor('center'),
-    //     color(0,0,0),
-    // ])
-
     dice.onHoverUpdate(() => {
         const t = time();
         dice.scale = vec2(2.8 + (t%1)/10)
@@ -234,6 +286,11 @@ function create_dice(n_face, pos_x, pos_y) {
     dice.onHoverEnd(()=>{
         dice.scale = vec2(2.8)
     })
+
+    function to_result_phase() {
+        go('result_phase', combi)
+    }
+    addButton("Terminer La Manche", vec2(600,500), to_result_phase)
 }
 
 function switch_status(dice) {
@@ -249,96 +306,89 @@ function switch_status(dice) {
     }
 }
 
-// onClick('dice', (dice) => 
-//     switch_status(dice)
-//     )
-
-function throw_dice() {
-
-    get('info_txt').forEach(txt => {
-        destroy(txt)
-    })
-
-    if (get('dice').length == 0) {
-        
-        for (let i = 1; i < 6; i++) {
-        
-            dice = create_dice(6, i*80,100);
-
-        }
-    } else {
-        
-        const selected_dices = get('selected');
-
-        let dice_pos = [];
-        selected_dices.forEach(dice => {
-
-            dice_pos.push(dice.pos)
-            destroy(dice)
-        });
-
-        dice_pos.forEach(p => {
-            create_dice(6, p.x, p.y)
-        });
-    }
-
-    const current_dices = get('dice');
-    const current_values = [];
-    current_dices.forEach(dice => {current_values.push(dice.value)
-    });
-
-    combi = check_combi(current_values);
-
-    const current_combi = add([
-        pos(60,400),
-        anchor('left'),
-        text('Oh tu as ' + combi),
-        'info_txt'
-    ]);
+scene('dice_phase', ()=>{
     
-    const round_txt = add([
-        pos(420, 500),
-        text(round + '/' + max_round),
-        'info_txt'
-    ])
-
-    if (round == max_round) {
-
-        setTimeout(() => {
-            go('buy_phase')
-        }, 1200);
-        
-    } else {
-        return round += 1;
-    }
-
-}
-
-    // Adds the buttons with the function we added
-    addButton("Lance les Dés !", vec2(220, 500));
+    round = 1;
+    addButton("Lancer Les Dés", vec2(220, 500), throw_dice);
     onUpdate(() => setCursor("default"));
     onClick('dice', (dice) => 
-    switch_status(dice)
-    )
+    switch_status(dice))
+})
+
+scene('result_phase', (combi)=>{
+
+    // const levels = [1,2,3,4]
+    let result_text = '';
+    console.log(combi, level+1);
+
+    if (combi >= level+1){
+        result_text = `Bravo tu as réussi,\nmais sera-tu capable d'obtenir au moins ${level + 2} dés de la même couleur ?`
+
+        if (combi > level + 1) {
+            result_text = `Bravo tu as réussi,\nmais auras-tu à nouveau assez de chance pour obtenir au moins ${level + 2}?`            
+        }
+        
+        function to_dice_phase() {
+            go('dice_phase');
+            level += 1;
+        };
+        
+        addButton('Continuer', vec2(200, 400),to_dice_phase);
+    } else {
+        
+        result_text = `Eh non tu n'as pas réussi`
+
+        function to_buy_phase() {
+            go('buy_phase');
+        };
+
+        addButton('Retente ta chance', vec2(200, 400),to_buy_phase);
+    }
+
+    const combi_text = add([
+        pos(60, 200),
+        text(result_text),
+        anchor('left'),
+        'result_txt'
+    ]);
 })
 
 scene('buy_phase', ()=>{
+
+    // const ameliorations = {
+    //     'pli_sup' : max_round+=1,
+    //     'de_sup': max_dice+=1,
+    // };
 
     const choice_01 = add([
         rect(300,500),
         pos(80,10),
         color(80,10,80),
         area(),
-        'choice_01'
+        'choice'
     ]);
+
     const choice_02 = add([
         rect(300,500),
         pos(390,10),
         color(180,80,180),
         area(),
-        'choice_02'        
+        'choice'        
     ])
-    console.log('ACHETE !');
+
+    choice_01.onClick(()=>{
+        // ameliorations['pli_sup'];
+        max_round += 1;
+        round = 1; 
+        go('dice_phase');
+    });
+
+    choice_02.onClick(()=>{
+        // ameliorations['de_sup'];
+        max_dice += 1;
+        round = 1;
+        go('dice_phase');
+    });
 })
 
-go('dice_phase')
+go('dice_phase');

@@ -124,6 +124,10 @@ let level = 1;
 let round = 1;
 let max_round = 3;
 let max_dice = 5;
+let dice_type = 6;
+let buy_count = 0;
+let upgrades = ['round_up','dice_up','dice_type_3','dice_type_2']
+// let owned_upgrades = []
 
 onUpdate(() => setCursor("default"));
 
@@ -212,7 +216,7 @@ function throw_dice() {
 
             for (let i = 1; i <= max_dice; i++) {
             
-                dice = create_dice(6, i*80,100);
+                dice = create_dice(dice_type, i*80,100);
             
             }
         } else {
@@ -353,12 +357,22 @@ scene('result_phase', (combi)=>{
     ]);
 })
 
-scene('buy_phase', ()=>{
+function get_upgrade(upgrade){
+    if (upgrade == 'round_up'){
+        max_round+=1;
+    }
+    if (upgrade == 'dice_up'){
+        max_dice+=1;
+    }
+    if (upgrade == 'dice_type_3'){
+        dice_type = 3;
+    }
+    if (upgrade == 'dice_type_3'){
+        dice_type = 2;
+    }
+}
 
-    // const ameliorations = {
-    //     'pli_sup' : max_round+=1,
-    //     'de_sup': max_dice+=1,
-    // };
+scene('buy_phase', ()=>{
 
     const choice_01 = add([
         rect(300,500),
@@ -368,6 +382,11 @@ scene('buy_phase', ()=>{
         'choice'
     ]);
 
+    choice_01.add([
+        text(upgrades[0]),
+        anchor('center')
+    ])
+
     const choice_02 = add([
         rect(300,500),
         pos(390,10),
@@ -376,19 +395,25 @@ scene('buy_phase', ()=>{
         'choice'        
     ])
 
+    choice_02.add([
+        text(upgrades[1]),
+        anchor('center')
+    ])
+
     choice_01.onClick(()=>{
-        // ameliorations['pli_sup'];
-        max_round += 1;
+        get_upgrade(upgrades[0])
+        upgrades.splice(0,1)
         round = 1; 
         go('dice_phase');
     });
 
     choice_02.onClick(()=>{
-        // ameliorations['de_sup'];
-        max_dice += 1;
+        get_upgrade(upgrades[1])
+        upgrades.splice(1,1)
         round = 1;
         go('dice_phase');
     });
+    console.log(upgrades)
 })
 
 go('dice_phase');

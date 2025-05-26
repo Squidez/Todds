@@ -126,8 +126,9 @@ let max_round = 3;
 let max_dice = 5;
 let dice_type = 6;
 let buy_count = 0;
-let upgrades = ['round_up','dice_up','dice_type_3','dice_type_2']
-// let owned_upgrades = []
+let magic_finger = true;
+let upgrades = ['round_up','dice_up','magic_finger','dice_type_3',];
+let sprites = ['dice1','dice2','dice3','dice4','dice5','dice6'];
 
 onUpdate(() => setCursor("default"));
 
@@ -216,28 +217,41 @@ function throw_dice() {
 
             for (let i = 1; i <= max_dice; i++) {
             
-                dice = create_dice(dice_type, i*80,100);
+                dice = create_dice(dice_type, i*80,100,);
             
             }
         } else {
 
             const selected_dices = get('selected');
-        
+
             let dice_pos = [];
             selected_dices.forEach(dice => {
             
                 dice_pos.push(dice.pos)
-                destroy(dice)
             });
-        
-            dice_pos.forEach(p => {
-                create_dice(6, p.x, p.y)
+
+            if (magic_finger == true & selected_dices.length == 1){
+
+                for (let i = 0; i <= dice_type - 1 ; i++) {
+                    color_picker(i, dice_pos[0].x, dice_pos[0].y)
+                }
+
+            } else {
+
+                selected_dices.forEach(dice => {
+                    destroy(dice)
+                })
+                
+                dice_pos.forEach(p => {
+                create_dice(dice_type, p.x, p.y)
+
             });
         }
-
+    }
         const current_dices = get('dice');
         const current_values = [];
-        current_dices.forEach(dice => {current_values.push(dice.value)
+        current_dices.forEach(dice => {
+            current_values.push(dice.value)
         });
 
         combi = check_combi(current_values);
@@ -263,11 +277,9 @@ function throw_dice() {
     }
 }
 
-function create_dice(n_face, pos_x, pos_y) {
+function create_dice(n_face, pos_x, pos_y, dice_value = Math.floor(Math.random() * n_face)) {
 
-    dice_value = Math.floor(Math.random() * n_face);
-    sprites = ['dice1','dice2','dice3','dice4','dice5','dice6']
-    
+    // dice_value = dice_value || Math.floor(Math.random() * n_face);    
     const dice = add([
         
         sprite(sprites[dice_value],
@@ -275,7 +287,7 @@ function create_dice(n_face, pos_x, pos_y) {
         pos(pos_x,pos_y),
         area(),
         anchor("center"),
-        { value: dice_value},
+        {value: dice_value},
         scale(2.8),
         'dice',
         'unselected',
@@ -283,7 +295,7 @@ function create_dice(n_face, pos_x, pos_y) {
 
     dice.onHoverUpdate(() => {
         const t = time();
-        dice.scale = vec2(2.8 + (t%1)/10)
+        dice.scale = vec2(2.8 + (t%1)/2.5)
         setCursor("pointer");
     });
 
@@ -295,6 +307,42 @@ function create_dice(n_face, pos_x, pos_y) {
         go('result_phase', combi)
     }
     addButton("Terminer La Manche", vec2(600,500), to_result_phase)
+}
+
+function color_picker (i, pos_x, pos_y) {
+
+    const choose_color = add([
+        sprite(sprites[i],
+            {anim: 'unselected'}),
+        pos((1+i)*80,150),
+        area(),
+        anchor("center"),
+        { value: i},
+        scale(3),
+        'color_pick'
+    ])
+
+    choose_color.onHoverUpdate(() => {
+        const t = time();
+        choose_color.scale = vec2(2.8 + (t%1)/2.5)
+        setCursor("pointer");
+    });
+
+    choose_color.onHoverEnd(()=>{
+        choose_color.scale = vec2(2.8)
+    })
+
+    const selected_dices = get('selected');  
+
+    choose_color.onClick(() => {
+
+        destroy(selected_dices[0])
+        create_dice(dice_type, pos_x, pos_y, choose_color.value)
+        get('color_pick').forEach((c) => {
+            destroy(c)
+        })
+        // update_round()
+    })
 }
 
 function switch_status(dice) {
@@ -311,10 +359,12 @@ function switch_status(dice) {
 }
 
 scene('dice_phase', ()=>{
+
+    console.log(dice_type)
     
     round = 1;
-    addButton("Lancer Les Dés", vec2(220, 500), throw_dice);
     onUpdate(() => setCursor("default"));
+    addButton("Lancer Les Dés", vec2(220, 500), throw_dice);
     onClick('dice', (dice) => 
     switch_status(dice))
 })
@@ -367,8 +417,8 @@ function get_upgrade(upgrade){
     if (upgrade == 'dice_type_3'){
         dice_type = 3;
     }
-    if (upgrade == 'dice_type_3'){
-        dice_type = 2;
+    if (upgrade == 'magic_finger'){
+        magic_finger = true;
     }
 }
 

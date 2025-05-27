@@ -126,7 +126,7 @@ let max_round = 3;
 let max_dice = 5;
 let dice_type = 6;
 let buy_count = 0;
-let magic_finger = true;
+let magic_finger = false;
 let upgrades = ['round_up','dice_up','magic_finger','dice_type_3',];
 let sprites = ['dice1','dice2','dice3','dice4','dice5','dice6'];
 
@@ -209,10 +209,6 @@ function throw_dice() {
 
     if (round <= max_round){
 
-        get('info_txt').forEach(txt => {
-                destroy(txt)
-            })
-
         if (get('dice').length == 0) {
 
             for (let i = 1; i <= max_dice; i++) {
@@ -248,33 +244,54 @@ function throw_dice() {
             });
         }
     }
-        const current_dices = get('dice');
-        const current_values = [];
-        current_dices.forEach(dice => {
-            current_values.push(dice.value)
-        });
+        text_update()
+        return round+=1
 
-        combi = check_combi(current_values);
+    } else {
+
+        debug.log('plus de lancer')
+    }
+}
+
+function text_update(round_update = true, combi_update = true) {
+
+    const current_dices = get('dice');
+    const current_values = [];
+    current_dices.forEach(dice => {
+        current_values.push(dice.value)
+    });
+    combi = check_combi(current_values);
+
+    if (combi_update == true){
+
+        get('combi_txt').forEach(txt => {
+                destroy(txt)
+            })
 
         const current_combi = add([
             pos(280,420),
             anchor('left'),
             text(`Combinaison : ${combi}`),
-            'info_txt'
-        ]);
+            'info_txt',
+            'combi_txt'
+    ]);
+    }
+
+    if (round_update == true) {
+
+        get('round_txt').forEach(txt => {
+                destroy(txt)
+            })
 
         const round_txt = add([
             pos(60,420),
             anchor('left'),
             text(`Lancer ${round}/${max_round}`),
-            'info_txt'
+            'info_txt',
+            'round_txt'
         ])
-
-        return round+=1
-    } else {
-
-        debug.log('plus de lancer')
     }
+    
 }
 
 function create_dice(n_face, pos_x, pos_y, dice_value = Math.floor(Math.random() * n_face)) {
@@ -341,7 +358,15 @@ function color_picker (i, pos_x, pos_y) {
         get('color_pick').forEach((c) => {
             destroy(c)
         })
-        // update_round()
+
+        const current_dices = get('dice');
+        const current_values = [];
+        current_dices.forEach(dice => {
+            current_values.push(dice.value)
+        });
+
+        text_update(round_update = false)
+
     })
 }
 
@@ -371,25 +396,31 @@ scene('dice_phase', ()=>{
 
 scene('result_phase', (combi)=>{
 
-    // const levels = [1,2,3,4]
     let result_text = '';
-    console.log(combi, level+1);
 
+
+    console.log(combi, level)
     if (combi >= level+1){
-        result_text = `Bravo tu as réussi,\nmais sera-tu capable d'obtenir au moins ${level + 2} dés de la même couleur ?`
+        if (level < 4){
+            result_text = `Bravo tu as réussi,\nmais sera-tu capable d'obtenir au moins ${level + 2} dés de la même couleur ?`
 
-        if (combi > level + 1) {
-            result_text = `Bravo tu as réussi,\nmais auras-tu à nouveau assez de chance pour obtenir au moins ${level + 2}?`            
+            if (combi > level + 1) {
+                result_text = `Bravo tu as réussi,\nmais auras-tu à nouveau assez de chance pour obtenir au moins ${level + 2}?`            
+            }
+
+            function to_dice_phase() {
+                go('dice_phase');
+                level += 1;
+            };
+
+            addButton('Continuer', vec2(200, 400),to_dice_phase);
+
+            } else {
+                result_text = `Bravo tu as gagné !`
         }
-        
-        function to_dice_phase() {
-            go('dice_phase');
-            level += 1;
-        };
-        
-        addButton('Continuer', vec2(200, 400),to_dice_phase);
-    } else {
-        
+    } 
+    if (combi < level+1) {
+
         result_text = `Eh non tu n'as pas réussi`
 
         function to_buy_phase() {
@@ -398,6 +429,7 @@ scene('result_phase', (combi)=>{
 
         addButton('Retente ta chance', vec2(200, 400),to_buy_phase);
     }
+    
 
     const combi_text = add([
         pos(60, 200),

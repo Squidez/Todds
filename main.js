@@ -119,16 +119,74 @@ loadSprite("dice6", "assets/dice_sprites.png", {
         }
     }
 });
+loadSprite("d3_dice1", "assets/d3_dice_sprites.png", {
+    sliceX: 12,
+    sliceY: 3,
+    anims: {
+        'unselected' : 5,
+        'throw' : {
+            from : 0,
+            to : 5,
+            speed : 12,
+            loop : false,
+        },
+        'selected' : {
+            from : 6,
+            to : 11,
+            speed : 12,
+            loop : true,
+        }
+    }
+});
+loadSprite("d3_dice2", "assets/d3_dice_sprites.png", {
+    sliceX: 12,
+    sliceY: 3,
+    anims: {
+        'unselected' : 17,
+        'throw' : {
+            from : 12,
+            to : 17,
+            speed : 12,
+            loop : false,
+        },
+        'selected' : {
+            from : 18,
+            to : 23,
+            speed : 12,
+            loop : true,
+        }
+    }
+});
+loadSprite("d3_dice3", "assets/d3_dice_sprites.png", {
+    sliceX: 12,
+    sliceY: 3,
+    anims: {
+        'unselected' : 29,
+        'throw' : {
+            from : 24,
+            to : 29,
+            speed : 12,
+            loop : false,
+        },
+        'selected' : {
+            from : 30,
+            to : 35,
+            speed : 12,
+            loop : true,
+        }
+    }
+});
 
 let level = 1;
 let round = 1;
 let max_round = 3;
 let max_dice = 5;
-let dice_type = 6;
+let dice_type = 3;
 let buy_count = 0;
-let magic_finger = false;
+let magic_finger = true;
 let upgrades = ['round_up','dice_up','magic_finger','dice_type_3',];
-let sprites = ['dice1','dice2','dice3','dice4','dice5','dice6'];
+let d6_sprites = ['dice1','dice2','dice3','dice4','dice5','dice6'];
+let d3_sprites = ['d3_dice1','d3_dice2','d3_dice3']
 
 onUpdate(() => setCursor("default"));
 
@@ -296,7 +354,12 @@ function text_update(round_update = true, combi_update = true) {
 
 function create_dice(n_face, pos_x, pos_y, dice_value = Math.floor(Math.random() * n_face)) {
 
-    // dice_value = dice_value || Math.floor(Math.random() * n_face);    
+    if (n_face === 3) {
+        sprites = d3_sprites
+    } else {
+        sprites = d6_sprites
+    }
+
     const dice = add([
         
         sprite(sprites[dice_value],

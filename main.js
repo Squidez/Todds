@@ -1,9 +1,16 @@
 
 // initialisation
 kaplay({
+    width : 960,
+    height : 540,
+    stretch : true,
+    crisp : true,
+    // font : '',
     background: [100, 125, 100],
-
+    canvas: document.querySelector("#game_layout"),
 });
+
+// loadFont('name', 'path');
 
 loadSprite("dice1", "assets/dice_sprites.png", {
     sliceX: 12,
@@ -177,6 +184,13 @@ loadSprite("d3_dice3", "assets/d3_dice_sprites.png", {
     }
 });
 
+// Dimension :
+const width = 960;
+const height = 540;
+const x_center = width/2;
+const y_center = height/2;
+const offset = 20;
+
 let level = 1;
 let round = 1;
 let max_round = 3;
@@ -265,6 +279,19 @@ function addButton(
 
 function throw_dice() {
 
+    if (round == 1) {
+        let throw_btn = get('throw_btn')[0];
+        destroy(throw_btn);
+        addButton('Lance les Dés', vec2(x_center-offset-160,height-60), throw_dice)
+    }
+
+    const selected_dices = get('selected');
+
+    if (round > 1 & selected_dices.length == 0) {
+        return debug.log(`Tu n 'as pas sélectionné de dés !`)
+        
+    }
+
     if (round <= max_round){
 
         if (get('dice').length == 0) {
@@ -276,7 +303,7 @@ function throw_dice() {
             }
         } else {
 
-            const selected_dices = get('selected');
+            // const selected_dices = get('selected');
 
             let dice_pos = [];
             selected_dices.forEach(dice => {
@@ -386,7 +413,7 @@ function create_dice(n_face, pos_x, pos_y, dice_value = Math.floor(Math.random()
     function to_result_phase() {
         go('result_phase', combi)
     }
-    addButton("Terminer La Manche", vec2(600,500), to_result_phase)
+    addButton("Terminer La Manche", vec2(x_center+offset+160,height-60), to_result_phase)
 }
 
 function color_picker (i, pos_x, pos_y) {
@@ -452,9 +479,9 @@ scene('dice_phase', ()=>{
     
     round = 1;
     onUpdate(() => setCursor("default"));
-    addButton("Lancer Les Dés", vec2(220, 500), throw_dice);
+    addButton("Lance Les Dés !", vec2(x_center, y_center), throw_dice);
     onClick('dice', (dice) => 
-    switch_status(dice))
+        switch_status(dice))
 })
 
 scene('result_phase', (combi)=>{
@@ -476,7 +503,7 @@ scene('result_phase', (combi)=>{
                 level += 1;
             };
 
-            addButton('Continuer', vec2(200, 400),to_dice_phase);
+            addButton('Continuer', vec2(x_center, y_center+offset),to_dice_phase);
 
             } else {
                 result_text = `Bravo tu as gagné !`
@@ -490,7 +517,7 @@ scene('result_phase', (combi)=>{
             go('buy_phase');
         };
 
-        addButton('Retente ta chance', vec2(200, 400),to_buy_phase);
+        addButton('Retente ta chance', vec2(x_center, y_center+offset),to_buy_phase);
     }
     
 

@@ -226,7 +226,7 @@ function check_combi(dice_values) {
     // if (frequencies[0] === 2 && frequencies[1] === 2) return 'Deux Paire';
     if (frequencies[0] === 2) return 2;
   
-    return 'aucun';
+    return 0;
 }
 
 function addButton(
@@ -236,7 +236,7 @@ function addButton(
     
         // add a parent background object
     const btn = add([
-        rect(320, 80, { radius: 8 }),
+        rect(380, 80, { radius: 8 }),
         pos(p),
         area(),
         scale(1),
@@ -282,7 +282,7 @@ function throw_dice() {
     if (round == 1) {
         let throw_btn = get('throw_btn')[0];
         destroy(throw_btn);
-        addButton('Lance les Dés', vec2(x_center-offset-160,height-60), throw_dice)
+        addButton('Lance les Dés', vec2(x_center-220,height-60), throw_dice)
     }
 
     const selected_dices = get('selected');
@@ -296,9 +296,14 @@ function throw_dice() {
 
         if (get('dice').length == 0) {
 
-            for (let i = 1; i <= max_dice; i++) {
-            
-                dice = create_dice(dice_type, i*80,100,);
+            for (let i = 0; i < max_dice; i++) {
+                
+                let dice_offset = i - Math.floor(max_dice/2);
+                if (max_dice%2 == 0) {
+                    dice_offset = i - max_dice/2 + 0.5;
+                }
+                const x = x_center + dice_offset*84;
+                dice = create_dice(dice_type, x,200,);
             
             }
         } else {
@@ -354,9 +359,9 @@ function text_update(round_update = true, combi_update = true) {
             })
 
         const current_combi = add([
-            pos(280,420),
+            pos(510,412),
             anchor('left'),
-            text(`Combinaison : ${combi}`),
+            text(`Dés identiques : ${combi}`),
             'info_txt',
             'combi_txt'
     ]);
@@ -369,9 +374,9 @@ function text_update(round_update = true, combi_update = true) {
             })
 
         const round_txt = add([
-            pos(60,420),
+            pos(70,412),
             anchor('left'),
-            text(`Lancer ${round}/${max_round}`),
+            text(`Lancer : ${round}/${max_round}`),
             'info_txt',
             'round_txt'
         ])
@@ -395,7 +400,7 @@ function create_dice(n_face, pos_x, pos_y, dice_value = Math.floor(Math.random()
         area(),
         anchor("center"),
         {value: dice_value},
-        scale(2.8),
+        scale(3),
         'dice',
         'unselected',
     ])
@@ -413,7 +418,7 @@ function create_dice(n_face, pos_x, pos_y, dice_value = Math.floor(Math.random()
     function to_result_phase() {
         go('result_phase', combi)
     }
-    addButton("Terminer La Manche", vec2(x_center+offset+160,height-60), to_result_phase)
+    addButton("Terminer La Manche", vec2(x_center+220,height-60), to_result_phase)
 }
 
 function color_picker (i, pos_x, pos_y) {
@@ -475,7 +480,13 @@ function switch_status(dice) {
 
 scene('dice_phase', ()=>{
 
-    console.log(dice_type)
+    const current_level = add([
+        pos(x_center,80),
+        anchor('center'),
+        text(`Lance au moins ${level+1} identiques !`),
+        // 'info_txt',
+        'level_txt'
+    ])
     
     round = 1;
     onUpdate(() => setCursor("default"));
@@ -492,10 +503,10 @@ scene('result_phase', (combi)=>{
     console.log(combi, level)
     if (combi >= level+1){
         if (level < 4){
-            result_text = `Bravo tu as réussi,\nmais sera-tu capable d'obtenir au moins ${level + 2} dés de la même couleur ?`
+            result_text = `Bravo tu as réussi,\nmais sera-tu capable d'obtenir \nau moins ${level + 2} dés de la même couleur ?`
 
             if (combi > level + 1) {
-                result_text = `Bravo tu as réussi,\nmais auras-tu à nouveau assez de chance pour obtenir au moins ${level + 2}?`            
+                result_text = `Bravo tu as réussi,\nmais auras-tu à nouveau assez de chance \npour obtenir au moins ${level + 2}?`            
             }
 
             function to_dice_phase() {
@@ -511,7 +522,7 @@ scene('result_phase', (combi)=>{
     } 
     if (combi < level+1) {
 
-        result_text = `Eh non tu n'as pas réussi`
+        result_text = `Eh non tu n'as pas réussi !`
 
         function to_buy_phase() {
             go('buy_phase');
@@ -522,9 +533,9 @@ scene('result_phase', (combi)=>{
     
 
     const combi_text = add([
-        pos(60, 200),
+        pos(x_center, 160),
         text(result_text),
-        anchor('left'),
+        anchor('center'),
         'result_txt'
     ]);
 })

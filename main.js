@@ -200,7 +200,7 @@ let buy_count = 0;
 let magic_finger = false;
 let upgrades = ['round_up','dice_up','magic_finger','dice_type_3',];
 let d6_sprites = ['dice1','dice2','dice3','dice4','dice5','dice6'];
-let d3_sprites = ['d3_dice1','d3_dice2','d3_dice3']
+let d3_sprites = ['d3_dice1','d3_dice2','d3_dice3'];
 
 onUpdate(() => setCursor("default"));
 
@@ -234,7 +234,7 @@ function addButton(
     p = vec2(200, 100),
     call_fct){
     
-        // add a parent background object
+    // add a parent background object
     const btn = add([
         rect(380, 80, { radius: 8 }),
         pos(p),
@@ -307,8 +307,6 @@ function throw_dice() {
             
             }
         } else {
-
-            // const selected_dices = get('selected');
 
             let dice_pos = [];
             selected_dices.forEach(dice => {
@@ -422,17 +420,34 @@ function create_dice(n_face, pos_x, pos_y, dice_value = Math.floor(Math.random()
 }
 
 function color_picker (i, pos_x, pos_y) {
+    
+    let col_offset = i - dice_type/2 + 0.5;
+    let x = x_center+col_offset*84;
+
+    if (dice_type%2 != 0) {
+        col_offset = i + Math.floor(dice_type/2)
+    }
 
     const choose_color = add([
         sprite(sprites[i],
             {anim: 'unselected'}),
-        pos((1+i)*80,150),
+        pos(x,300),
         area(),
         anchor("center"),
         { value: i},
         scale(3),
         'color_pick'
     ])
+
+    // const bg_mask = add([
+    //     rect(width-100,height-100),
+    //     pos(x_center,y_center),
+    //     anchor('center'),
+    //     color(10,10,10),
+    //     opacity(0.2),
+    //     area(),
+        
+    // ])
 
     choose_color.onHoverUpdate(() => {
         const t = time();
@@ -441,26 +456,26 @@ function color_picker (i, pos_x, pos_y) {
     });
 
     choose_color.onHoverEnd(()=>{
-        choose_color.scale = vec2(2.8)
-    })
+        choose_color.scale = vec2(2.8);
+    });
 
     const selected_dices = get('selected');  
 
     choose_color.onClick(() => {
 
-        destroy(selected_dices[0])
-        create_dice(dice_type, pos_x, pos_y, choose_color.value)
+        destroy(selected_dices[0]);
+        create_dice(dice_type, pos_x, pos_y, choose_color.value);
         get('color_pick').forEach((c) => {
-            destroy(c)
-        })
+            destroy(c);
+        });
 
         const current_dices = get('dice');
         const current_values = [];
         current_dices.forEach(dice => {
-            current_values.push(dice.value)
+            current_values.push(dice.value);
         });
 
-        text_update(round_update = false)
+        text_update(round_update = false);
 
     })
 }

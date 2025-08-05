@@ -1,3 +1,6 @@
+// imports
+import kaplay from "https://unpkg.com/kaplay@3001.0.19/dist/kaplay.mjs"; 
+import {loquacePlugin} from "/src/kaplay-loquace.js"
 
 // initialisation
 kaplay({
@@ -9,10 +12,21 @@ kaplay({
     // font : '',
     background: [100, 125, 100],
     canvas: document.querySelector("#game_layout"),
+    space: {
+            keyboard: ["space"],
+          },
+    
+    plugins: [loquacePlugin],
 });
 
-// loadFont('name', 'path');
+// Loquace parameters
+loquace.init({ 
+    showNextPrompt: false,
+});
+// Define a key to dismiss/continue the dialog
+onKeyPress("space", loquace.clear());
 
+// loadFont('name', 'path');
 loadSprite("dice1", "assets/dice_sprites.png", {
     sliceX: 12,
     sliceY: 6,
@@ -203,10 +217,24 @@ let magic_finger = false;
 let mf_count = 0;
 let mf_max = 1;
 let upgrades = ['round_up','dice_up','magic_finger','magic_finger_up','dice_type_3',];
+let sprites = [];
 let d6_sprites = ['dice1','dice2','dice3','dice4','dice5','dice6'];
 let d3_sprites = ['d3_dice1','d3_dice2','d3_dice3'];
+let dice = Object;
+let combi = Number;
+let round_update = Boolean;
+let combi_update = Boolean;
 
 onUpdate(() => setCursor("default"));
+
+function message_error(msg) {
+
+    loquace.pop(msg, 
+        {position : 'center',
+         doTween: false,  
+        });
+    setTimeout(() => {loquace.clear();}, 1500);
+}
 
 function check_combi(dice_values) {
 
@@ -292,7 +320,7 @@ function throw_dice() {
     const selected_dices = get('selected');
 
     if (round > 1 & selected_dices.length == 0) {
-        return debug.log(`Tu n 'as pas sélectionné de dés !`)
+        return message_error(`Tu n'as pas sélectionné de dés !`)//loquace.pop(`Tu n'as pas sélectionné de dés !`, {position : 'center'});
         
     }
 
@@ -329,7 +357,11 @@ function throw_dice() {
 
                 } else {
                     
-                    debug.log('You already used your magic finger this round')
+                    message_error(`Tu n'as plus de lancer magique pour cette manche`)
+                    // loquace.pop(`Tu n'as plus de lancer magique pour cette manche`,
+                    //             {position : 'center'});
+                    // debug.log('You already used your magic finger this round'
+          
                     round -=1; 
                 }    
 
@@ -350,7 +382,9 @@ function throw_dice() {
 
     } else {
 
-        debug.log('plus de lancer')
+        message_error(`Oh non, tu n'as plus de Lancer !`)
+        // loquace.pop(`Oh non, tu n'as plus de Lancer !`,
+        //     {position : 'center', doTween : true, showNextPrompt: false});
     }
 }
 

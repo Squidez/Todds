@@ -191,6 +191,7 @@ const x_center = width/2;
 const y_center = height/2;
 const offset = 20;
 
+// Declare variables
 let level = 1;
 let round = 1;
 let max_round = 3;
@@ -198,7 +199,9 @@ let max_dice = 5;
 let dice_type = 6;
 let buy_count = 0;
 let magic_finger = false;
-let upgrades = ['round_up','dice_up','magic_finger','dice_type_3',];
+let mf_count = 0;
+let mf_max = 1;
+let upgrades = ['round_up','dice_up','magic_finger','magic_finger_up','dice_type_3',];
 let d6_sprites = ['dice1','dice2','dice3','dice4','dice5','dice6'];
 let d3_sprites = ['d3_dice1','d3_dice2','d3_dice3'];
 
@@ -316,9 +319,18 @@ function throw_dice() {
 
             if (magic_finger == true & selected_dices.length == 1){
 
-                for (let i = 0; i <= dice_type - 1 ; i++) {
+                if (mf_count < mf_max) {
+
+                    for (let i = 0; i <= dice_type - 1 ; i++) {
                     color_picker(i, dice_pos[0].x, dice_pos[0].y)
-                }
+                    }
+                    mf_count += 1;
+
+                } else {
+                    
+                    debug.log('You already used your magic finger this round')
+                    round -=1; 
+                }    
 
             } else {
 
@@ -332,7 +344,7 @@ function throw_dice() {
             });
         }
     }
-        text_update()
+        text_update();
         return round+=1
 
     } else {
@@ -504,6 +516,7 @@ scene('dice_phase', ()=>{
     ])
     
     round = 1;
+    mf_count = 0;
     onUpdate(() => setCursor("default"));
     addButton("Lance Les Dés !", vec2(x_center, y_center), throw_dice);
     onClick('dice', (dice) => 
@@ -514,8 +527,6 @@ scene('result_phase', (combi)=>{
 
     let result_text = '';
 
-
-    console.log(combi, level)
     if (combi >= level+1){
         if (level < 4){
             result_text = `Bravo tu as réussi,\nmais sera-tu capable d'obtenir \nau moins ${level + 2} dés de la même couleur ?`
@@ -544,8 +555,7 @@ scene('result_phase', (combi)=>{
         };
 
         addButton('Retente ta chance', vec2(x_center, y_center+offset),to_buy_phase);
-    }
-    
+    }  
 
     const combi_text = add([
         pos(x_center, 160),
@@ -568,6 +578,8 @@ function get_upgrade(upgrade){
     if (upgrade == 'magic_finger'){
         magic_finger = true;
     }
+    if (upgrade == 'magic_finger_up')
+        mf_max = 2;
 }
 
 scene('buy_phase', ()=>{

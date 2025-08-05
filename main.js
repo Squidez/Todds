@@ -3,7 +3,8 @@
 kaplay({
     width : 960,
     height : 540,
-    stretch : true,
+    // stretch : true,
+    letterbox : true,
     crisp : true,
     // font : '',
     background: [100, 125, 100],

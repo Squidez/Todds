@@ -6,11 +6,11 @@ import {loquacePlugin} from "/src/kaplay-loquace.js"
 kaplay({
     width : 960,
     height : 540,
-    // stretch : true,
+    stretch : true,
     letterbox : true,
     crisp : true,
     // font : '',
-    background: [100, 125, 100],
+    background: [141, 190, 162],
     canvas: document.querySelector("#game_layout"),
     space: {
             keyboard: ["space"],
@@ -23,8 +23,6 @@ kaplay({
 loquace.init({ 
     showNextPrompt: false,
 });
-// Define a key to dismiss/continue the dialog
-onKeyPress("space", loquace.clear());
 
 // loadFont('name', 'path');
 loadSprite("dice1", "assets/dice_sprites.png", {
@@ -198,6 +196,31 @@ loadSprite("d3_dice3", "assets/d3_dice_sprites.png", {
         }
     }
 });
+loadSprite("nenuphare", "assets/nenuphare.png");
+loadSprite("background", "assets/waves.png",{
+    sliceX: 2,
+    sliceY: 2,
+    anims: {
+        'water' : {
+            from : 0,
+            to : 3,
+            speed : 4,
+            loop : true,
+        },
+    }
+});
+loadSprite("bubble", "assets/bubble_sheet.png", {
+    sliceX: 20,
+    sliceY: 1,
+    anims: {
+        'pop' : {
+            from : 16,
+            to : 19,
+            speed : 6,
+            loop : false,
+        },
+    }
+});
 
 // Dimension :
 const width = 960;
@@ -226,6 +249,60 @@ let round_update = Boolean;
 let combi_update = Boolean;
 
 onUpdate(() => setCursor("default"));
+
+function set_background (){
+
+    get('bubbles').forEach(b => {
+                destroy(b)
+            })
+
+    const background_img = add([
+        sprite('background', {
+        tiled: true,
+        width: width,
+        height, height,
+        anim: 'water'}),
+        pos(0,0),
+        fixed(),
+        scale(1),
+        'background_img'
+    ])
+    
+    function pop_bubble() {
+
+        const bubbles = add([
+            sprite('bubble', {
+                anim: 'pop',
+                }),
+            scale(2),
+            fixed(),
+            'bubbles'
+            ]);
+        
+        const range_x = [].concat(
+            Array.from({ length: width * .25 }, (_, i) => i),
+            Array.from({ length: width*.25 }, (_, i) => i + width*.75)
+        );
+
+        let rand_x = range_x[Math.floor(Math.random()*range_x.length)];
+        let rand_y = Math.floor(Math.random() * height);
+        bubbles.pos = vec2(rand_x,rand_y);
+
+        const rand_delay = Math.floor(Math.random()*2000) + 500;        
+        setTimeout(pop_bubble, rand_delay);
+    }
+    
+    pop_bubble();
+
+    const board = add([
+        sprite('nenuphare'),
+        pos(x_center,y_center),
+        anchor('center'),
+        fixed()
+    ])
+};
+
+
 
 function message_error(msg) {
 
@@ -320,7 +397,7 @@ function throw_dice() {
     const selected_dices = get('selected');
 
     if (round > 1 & selected_dices.length == 0) {
-        return message_error(`Tu n'as pas sélectionné de dés !`)//loquace.pop(`Tu n'as pas sélectionné de dés !`, {position : 'center'});
+        return message_error(`Tu n'as pas sélectionné de dés !`);
         
     }
 
@@ -346,24 +423,18 @@ function throw_dice() {
                 dice_pos.push(dice.pos)
             });
 
-            if (magic_finger == true & selected_dices.length == 1){
+            if (magic_finger == true & selected_dices.length == 1 & mf_count < mf_max){
 
-                if (mf_count < mf_max) {
-
-                    for (let i = 0; i <= dice_type - 1 ; i++) {
+                for (let i = 0; i <= dice_type - 1 ; i++) {
                     color_picker(i, dice_pos[0].x, dice_pos[0].y)
                     }
                     mf_count += 1;
 
-                } else {
+                // else {
                     
-                    message_error(`Tu n'as plus de lancer magique pour cette manche`)
-                    // loquace.pop(`Tu n'as plus de lancer magique pour cette manche`,
-                    //             {position : 'center'});
-                    // debug.log('You already used your magic finger this round'
-          
-                    round -=1; 
-                }    
+                //     message_error(`Tu n'as plus de lancer magique pour cette manche`)        
+                //     round -=1; 
+                // }    
 
             } else {
 
@@ -383,8 +454,6 @@ function throw_dice() {
     } else {
 
         message_error(`Oh non, tu n'as plus de Lancer !`)
-        // loquace.pop(`Oh non, tu n'as plus de Lancer !`,
-        //     {position : 'center', doTween : true, showNextPrompt: false});
     }
 }
 
@@ -406,10 +475,20 @@ function text_update(round_update = true, combi_update = true) {
         const current_combi = add([
             pos(510,412),
             anchor('left'),
-            text(`Dés identiques : ${combi}`),
+            text(`Dés identiques : ${combi}/${level+1}`),
             'info_txt',
             'combi_txt'
-    ]);
+            ]);
+        
+        if (combi >= level+1) {
+            
+            current_combi.onUpdate(() => {
+                const t = time();
+                current_combi.color = hsl2rgb((t) % 1, 255, 255);
+                current_combi.scale = vec2(1);
+                });
+            }
+        
     }
 
     if (round_update == true) {
@@ -467,6 +546,16 @@ function create_dice(n_face, pos_x, pos_y, dice_value = Math.floor(Math.random()
 }
 
 function color_picker (i, pos_x, pos_y) {
+
+    // const bg_mask = make([
+    //     rect(width-100,height-100),
+    //     pos(x_center,y_center),
+    //     anchor('center'),
+    //     color(10,10,10),
+    //     opacity(1),
+    //     body(),-
+    //     scale(10)
+    // ])
     
     let col_offset = i - dice_type/2 + 0.5;
     let x = x_center+col_offset*84;
@@ -486,16 +575,6 @@ function color_picker (i, pos_x, pos_y) {
         'color_pick'
     ])
 
-    // const bg_mask = add([
-    //     rect(width-100,height-100),
-    //     pos(x_center,y_center),
-    //     anchor('center'),
-    //     color(10,10,10),
-    //     opacity(0.2),
-    //     area(),
-        
-    // ])
-
     choose_color.onHoverUpdate(() => {
         const t = time();
         choose_color.scale = vec2(2.8 + (t%1)/2.5)
@@ -506,7 +585,7 @@ function color_picker (i, pos_x, pos_y) {
         choose_color.scale = vec2(2.8);
     });
 
-    const selected_dices = get('selected');  
+    const selected_dices = get('selected');
 
     choose_color.onClick(() => {
 
@@ -541,6 +620,8 @@ function switch_status(dice) {
 }
 
 scene('dice_phase', ()=>{
+
+    set_background()
 
     const current_level = add([
         pos(x_center,80),

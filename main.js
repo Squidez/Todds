@@ -9,8 +9,9 @@ kaplay({
     stretch : true,
     letterbox : true,
     crisp : true,
-    // font : '',
-    background: [141, 190, 162],
+    texFilter : 'linear',
+    font : 'Schoolbell',
+    background: [50, 116, 76],
     canvas: document.querySelector("#game_layout"),
     space: {
             keyboard: ["space"],
@@ -24,7 +25,7 @@ loquace.init({
     showNextPrompt: false,
 });
 
-// loadFont('name', 'path');
+loadFont('Schoolbell', 'assets/Schoolbell-Regular.ttf');
 loadSprite("dice1", "assets/dice_sprites.png", {
     sliceX: 12,
     sliceY: 6,
@@ -197,18 +198,21 @@ loadSprite("d3_dice3", "assets/d3_dice_sprites.png", {
     }
 });
 loadSprite("nenuphare", "assets/nenuphare.png");
-loadSprite("background", "assets/waves.png",{
-    sliceX: 2,
-    sliceY: 2,
+loadSprite("btn_log", "assets/btn_log.png");
+loadSprite("waves", "assets/waves_bounce_v2.png",{
+    sliceX: 5,
+    sliceY: 1,
     anims: {
         'water' : {
             from : 0,
-            to : 3,
-            speed : 4,
+            to : 4,
+            speed : 2,
+            pingpong: true,
             loop : true,
         },
     }
 });
+loadSprite("background", "assets/background.png",);
 loadSprite("bubble", "assets/bubble_sheet.png", {
     sliceX: 20,
     sliceY: 1,
@@ -221,6 +225,7 @@ loadSprite("bubble", "assets/bubble_sheet.png", {
         },
     }
 });
+loadSprite("toad", 'assets/toad_ico.png')
 
 // Dimension :
 const width = 960;
@@ -239,7 +244,7 @@ let buy_count = 0;
 let magic_finger = false;
 let mf_count = 0;
 let mf_max = 1;
-let upgrades = ['round_up','dice_up','magic_finger','magic_finger_up','dice_type_3',];
+let upgrades = ['round_up','dice_up','magic_finger','dice_type_3',];
 let sprites = [];
 let d6_sprites = ['dice1','dice2','dice3','dice4','dice5','dice6'];
 let d3_sprites = ['d3_dice1','d3_dice2','d3_dice3'];
@@ -257,14 +262,24 @@ function set_background (){
             })
 
     const background_img = add([
-        sprite('background', {
-        tiled: true,
-        width: width,
-        height, height,
-        anim: 'water'}),
+        sprite('background'),
+        // anchor('center'),
         pos(0,0),
         fixed(),
         scale(1),
+        'background_img'
+    ])
+
+    const waves = add([
+        sprite('waves', {
+        // tiled: true,
+        width: width - 50,
+        height: height + 50,
+        anim: 'water'}),
+        anchor('center'),
+        pos(x_center,y_center),
+        fixed(),
+        scale(),
         'background_img'
     ])
     
@@ -280,12 +295,13 @@ function set_background (){
             ]);
         
         const range_x = [].concat(
-            Array.from({ length: width * .25 }, (_, i) => i),
-            Array.from({ length: width*.25 }, (_, i) => i + width*.75)
-        );
+            Array.from({ length: (width*.25 - width*.1) }, (_v, i) => height*.25 + i),
+            Array.from({ length: (width*.9 - width*.75)}, (_v, i) => width*.75 + i)
+            );
+        const range_y = Array.from({length: (height*.75 - height*.25)}, (v,i) => height*.25 + i);
 
         let rand_x = range_x[Math.floor(Math.random()*range_x.length)];
-        let rand_y = Math.floor(Math.random() * height);
+        let rand_y = range_y[Math.floor(Math.random()*range_y.length)];
         bubbles.pos = vec2(rand_x,rand_y);
 
         const rand_delay = Math.floor(Math.random()*2000) + 500;        
@@ -296,20 +312,37 @@ function set_background (){
 
     const board = add([
         sprite('nenuphare'),
-        pos(x_center,y_center),
+        pos(x_center,y_center-60),
         anchor('center'),
+        scale(1.1),
         fixed()
     ])
 };
 
-
+loquace.characters({
+    t: { // The character's key used in statements
+        name: 'Toad', // The character's name (unused at this time)
+        expressions: {
+            happy: 'toad',
+            },
+        defaultExpression: 'happy',
+        dialogType: 'pop', // default: 'pop', may be 'vn'
+        position: 'center', // There is a shorthand for position here (*)
+        },
+    });
 
 function message_error(msg) {
 
-    loquace.pop(msg, 
-        {position : 'center',
-         doTween: false,  
-        });
+    let error_msg = 't ' + msg;
+    loquace.script([
+        error_msg
+    ])
+
+    // loquace.script(error_msg, 
+    //     {position : 'center',
+    //      doTween: false,
+    //      sideImage : 'toad',
+    //     });
     setTimeout(() => {loquace.clear();}, 1500);
 }
 
@@ -341,33 +374,38 @@ function check_combi(dice_values) {
 function addButton(
     txt = "start game",
     p = vec2(200, 100),
+    tag = '',
     call_fct){
     
     // add a parent background object
     const btn = add([
-        rect(380, 80, { radius: 8 }),
+        sprite('btn_log'),
         pos(p),
         area(),
         scale(1),
         anchor("center"),
         outline(4),
         color(255, 255, 255),
-        'throw_btn'
+        animate(),
+        'btn'
     ]);
 
     // add a child object that displays the text
     btn.add([
         text(txt),
+        pos(0,5),
         anchor("center"),
-        color(0, 0, 0),
+        color(39, 7, 0),
     ]);
 
     // onHoverUpdate() comes from area() component
     // it runs every frame when the object is being hovered
     btn.onHoverUpdate(() => {
-        const t = time() * 10;
-        btn.color = hsl2rgb((t / 10) % 1, 0.6, 0.7);
-        btn.scale = vec2(1.2);
+        btn.animate('scale', [vec2(1), vec2(1.05)], {
+            duration : .6,
+            direction : 'ping-pong',
+            loop : true
+            });
         setCursor("pointer");
     });
 
@@ -375,8 +413,13 @@ function addButton(
     // it runs once when the object stopped being hovered
     btn.onHoverEnd(() => {
         btn.scale = vec2(1);
-        btn.color = rgb();
+        btn.unanimate('scale');
     });
+
+    if (tag != '') {
+
+        btn.tag(tag)
+    }
 
     // onClick() comes from area() component
     // it runs once when the object is clicked
@@ -391,7 +434,7 @@ function throw_dice() {
     if (round == 1) {
         let throw_btn = get('throw_btn')[0];
         destroy(throw_btn);
-        addButton('Lance les Dés', vec2(x_center-220,height-60), throw_dice)
+        addButton('Lance les Dés', vec2(x_center-250,height-80), 'throw_btn', throw_dice)
     }
 
     const selected_dices = get('selected');
@@ -472,24 +515,48 @@ function text_update(round_update = true, combi_update = true) {
                 destroy(txt)
             })
 
-        const current_combi = add([
-            pos(510,412),
-            anchor('left'),
-            text(`Dés identiques : ${combi}/${level+1}`),
-            'info_txt',
-            'combi_txt'
-            ]);
+        // const current_combi = add([
+        //     pos(width-47,height-17),
+        //     anchor('right'),
+        //     text(`Dés identiques : ${combi}/${level+1}`),
+        //     'info_txt',
+        //     'combi_txt'
+        //     ]);
         
         if (combi >= level+1) {
+
+             const current_combi = add([
+                pos(width-47,height-17),
+                anchor('right'),
+                text(`Dés identiques : ${combi}/${level+1}`,{
+                    transform: (idx, ch) => ({
+                        color: hsl2rgb((time() * 0.2 + idx * 0.1) % 1, 0.7, 0.8),
+                        pos: vec2(0, wave(-4, 4, time() * 4 + idx * 0.5)),
+                        scale: wave(1, 1.2, time() * 3 + idx),
+                        angle: wave(-9, 9, time() * 3 + idx),
+                    }),
+                }),
+                'info_txt',
+                'combi_txt'
+                ]);
+
             
-            current_combi.onUpdate(() => {
-                const t = time();
-                current_combi.color = hsl2rgb((t) % 1, 255, 255);
-                current_combi.scale = vec2(1);
-                });
-            }
+            // current_combi.onUpdate(() => {
+
+            //     const t = time();  
+            //     // current_combi.color = hsl2rgb((t) % 1, 255, 255); //(time() * 0.2 + idx * 0.1) % 1, 0.7, 0.8
+            //     });
+            // }
         
-    }
+        } else {
+            const current_combi = add([
+                pos(width-47,height-17),
+                anchor('right'),
+                text(`Dés identiques : ${combi}/${level+1}`),
+                'info_txt',
+                'combi_txt'
+                ]);
+        };
 
     if (round_update == true) {
 
@@ -498,7 +565,7 @@ function text_update(round_update = true, combi_update = true) {
             })
 
         const round_txt = add([
-            pos(70,412),
+            pos(47,height-17),
             anchor('left'),
             text(`Lancer : ${round}/${max_round}`),
             'info_txt',
@@ -506,7 +573,7 @@ function text_update(round_update = true, combi_update = true) {
         ])
     }
     
-}
+}}
 
 function create_dice(n_face, pos_x, pos_y, dice_value = Math.floor(Math.random() * n_face)) {
 
@@ -542,7 +609,7 @@ function create_dice(n_face, pos_x, pos_y, dice_value = Math.floor(Math.random()
     function to_result_phase() {
         go('result_phase', combi)
     }
-    addButton("Terminer La Manche", vec2(x_center+220,height-60), to_result_phase)
+    addButton("Terminer La Manche", vec2(x_center+250,height-80), 'end_btn',to_result_phase)
 }
 
 function color_picker (i, pos_x, pos_y) {
@@ -624,9 +691,20 @@ scene('dice_phase', ()=>{
     set_background()
 
     const current_level = add([
-        pos(x_center,80),
+        pos(x_center,65),
         anchor('center'),
-        text(`Lance au moins ${level+1} identiques !`),
+        text(
+            `[wavy]Lance au moins [rainbow]${level+1}[/rainbow] identiques ![/wavy]`,{
+            styles: {
+                "wavy": (idx, ch) => ({
+                    pos: vec2(0, wave(-4, 4, time() * .5 + idx * 0.5)),
+                    }),
+                "rainbow": (idx, ch) => ({
+                    color: hsl2rgb((time() * 0.2 + idx * 0.1) % 1, 0.7, 0.8),
+                    }),
+                },
+            },
+        ),
         // 'info_txt',
         'level_txt'
     ])
@@ -634,7 +712,7 @@ scene('dice_phase', ()=>{
     round = 1;
     mf_count = 0;
     onUpdate(() => setCursor("default"));
-    addButton("Lance Les Dés !", vec2(x_center, y_center), throw_dice);
+    addButton("Lance Les Dés !", vec2(x_center, height-175), 'throw_btn', throw_dice);
     onClick('dice', (dice) => 
         switch_status(dice))
 })
@@ -656,7 +734,7 @@ scene('result_phase', (combi)=>{
                 level += 1;
             };
 
-            addButton('Continuer', vec2(x_center, y_center+offset),to_dice_phase);
+            addButton('Continuer', vec2(x_center, y_center+offset), 'continue_btn',to_dice_phase);
 
             } else {
                 result_text = `Bravo tu as gagné !`
@@ -670,7 +748,7 @@ scene('result_phase', (combi)=>{
             go('buy_phase');
         };
 
-        addButton('Retente ta chance', vec2(x_center, y_center+offset),to_buy_phase);
+        addButton('Retente ta chance', vec2(x_center, y_center+offset),'retry_btn',to_buy_phase);
     }  
 
     const combi_text = add([
@@ -693,6 +771,7 @@ function get_upgrade(upgrade){
     }
     if (upgrade == 'magic_finger'){
         magic_finger = true;
+        upgrades.splice(2,0,'magic_finger_up');
     }
     if (upgrade == 'magic_finger_up')
         mf_max = 2;

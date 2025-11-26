@@ -222,6 +222,11 @@ loadSprite("bubble", "assets/bubbles.png", {
     }
 });
 loadSprite("toad", 'assets/toad_ico.png');
+loadSprite("bonus_round_up", 'assets/bonus_round_up.png');
+loadSprite("bonus_dice_up", 'assets/bonus_dice_up.png');
+loadSprite("bonus_mf", 'assets/bonus_mf.png');
+loadSprite("bonus_mt", 'assets/bonus_mt.png');
+loadSprite("bonus_dice_type_3", 'assets/bonus_dice_type_3.png');
 loadSprite('cursor', 'assets/mouse.png',{
     sliceX : 2,
     sliceY : 1,
@@ -240,13 +245,15 @@ const y_center = height/2;
 // Declare variables
 let level = 0;
 let round = 1;
+let tuto = true;
 let max_round = 3;
 let max_dice = 5;
 let dice_type = 6;
 let magic_finger = false;
 let mf_count = 0;
-let mf_max = 1;
-let upgrades = ['round_up','dice_up','magic_finger','dice_type_3',];
+let magic_throw = false;
+let mt_count = 0;
+let upgrades = ['round_up','dice_up','mf','mt','dice_type_3'];
 let sprites = [];
 let d6_sprites = ['dice1','dice2','dice3','dice4','dice5','dice6'];
 let d3_sprites = ['d3_dice1','d3_dice2','d3_dice3'];
@@ -263,18 +270,44 @@ loquace.init({
     showNextPrompt: false,
 });
 
+loquace.characters({
+    t: { // The character's key used in statements
+        name: 'Toad', // The character's name (unused at this time)
+        expressions: {
+            neutral: 'toad',
+            },
+        defaultExpression: 'neutral',
+        dialogType: 'vn', // default: 'pop', may be 'vn'
+        position: 'center', // There is a shorthand for position here (*)
+        },
+    });
+
 function loquace_cursor_update() {
 
-    if (get('loquaceDialog') > 0) {
-        const loquace_diag =  get('loquaceDialog')[0]
-    // get('loquaceDialog').forEach(l => { });
+    if (get('loquaceDialog').length == 1) {
 
-        loquace_diag.onHoverUpdate(() => {console.log('fff')}),//custom_cursor(hover = true)
-        loquace_diag.onHoverEnd(() => {custom_cursor()});
+        const loquace_diag =  get('loquaceDialog')[0]
+
+        if (get('diag_area') == 0) {
+
+            const diag_area = add([
+                rect(width - 120 - 2*30, 55),
+                color(255,0,0),
+                pos(loquace_diag.pos),
+                opacity(0),
+                area(),
+                'diag_area'
+            ])
+
+            diag_area.onHoverUpdate(() => {custom_cursor(hover = true)});
+            diag_area.onHoverEnd(() => {custom_cursor()});
+        }
+    } else {
+
+        get('diag_area').forEach(d_a => {destroy(d_a)})
     }
     
 }
-// onUpdate(() => loquace_cursor_update());
 
 function custom_cursor (hover = false) {
 
@@ -370,18 +403,6 @@ function pop_bubble() {
         setTimeout(pop_bubble, rand_delay);
     };
 
-loquace.characters({
-    t: { // The character's key used in statements
-        name: 'Toad', // The character's name (unused at this time)
-        expressions: {
-            neutral: 'toad',
-            },
-        defaultExpression: 'neutral',
-        dialogType: 'vn', // default: 'pop', may be 'vn'
-        position: 'center', // There is a shorthand for position here (*)
-        },
-    });
-
 function message_error(msg) {
 
     let error_msg = 't ' + msg;
@@ -414,6 +435,17 @@ function check_combi(dice_values) {
     if (frequencies[0] === 2) return 2;
   
     return 0;
+}
+
+function get_current_values() {
+
+    const current_dices = get('dice');
+    const current_values = [];
+    current_dices.forEach(dice => {
+        current_values.push(dice.value)
+    });
+
+    return current_values
 }
 
 function addButton(
@@ -479,6 +511,15 @@ function addButton(
     );
 }
 
+function get_possible_values(n_face) {
+
+    let current_values = get_current_values();
+    let possible_values = [...Array(n_face).keys()];
+    possible_values = possible_values.filter(x => current_values.includes(x));
+
+    return possible_values
+}
+
 function throw_dice() {
 
     if (round == 1) {
@@ -498,7 +539,9 @@ function throw_dice() {
 
         if (get('dice').length == 0) {
 
-            if (level == 1) {
+            if (tuto == true) {
+
+                tuto = false;
         
                 for (let i = 0; i < max_dice; i++) {
                 
@@ -513,10 +556,8 @@ function throw_dice() {
                 loquace.script([
                     "enableNextPrompt t Oh non ! Tu n'a aucun dé identiques.",
                     "enableNextPrompt t Clique sur les dés pour les sélectionner",
-                    'disableNextPrompt t Puis appuie sur le bouton "Lance les dés" pour le tirer les dés sélectionnés',
-                ])
-
-                };
+                    'disableNextPrompt t Puis appuie sur le bouton "Lance les dés" pour retirer les dés sélectionnés',
+                ])} 
                 } else {
 
                 for (let i = 0; i < max_dice; i++) {
@@ -529,6 +570,7 @@ function throw_dice() {
                     dice = create_dice(dice_type, x,200,);
                 
                 }}
+                
         } else {
 
             let dice_pos = [];
@@ -537,13 +579,13 @@ function throw_dice() {
                 dice_pos.push(dice.pos)
             });
 
-            if (magic_finger == true & selected_dices.length == 1 & mf_count < mf_max){
+            if (magic_finger == true & selected_dices.length == 1 & mf_count < 1){
 
                 for (let i = 0; i <= dice_type - 1 ; i++) {
                     color_picker(i, dice_pos[0].x, dice_pos[0].y)
                     }
-                    mf_count += 1;  
-
+                    mf_count += 1;
+                    
             } else {
 
                 selected_dices.forEach(dice => {
@@ -585,11 +627,7 @@ function  add_text_shadow(text_tag,input_text) {
 
 function text_update(round_update = true, combi_update = true) {
 
-    const current_dices = get('dice');
-    const current_values = [];
-    current_dices.forEach(dice => {
-        current_values.push(dice.value)
-    });
+    let current_values = get_current_values()
     combi = check_combi(current_values);
 
     if (combi_update == true){
@@ -809,12 +847,17 @@ scene('start', ()=>{
     
 });
 
+// Prevents clicking on a button of the next scene accidently
+function throw_dice_secu() {
+    setTimeout(() => {throw_dice()}, 1)
+}
+
 scene('dice_phase', ()=>{
 
+    custom_cursor();
     set_background();
     onUpdate(() => {loquace_cursor_update()});
     onMousePress(() => {loquace.next()});
-    // loquace_cursor_update();
 
     const current_level = add([
         pos(x_center,65),
@@ -837,8 +880,10 @@ scene('dice_phase', ()=>{
     
     round = 1;
     mf_count = 0;
+    mt_count = 0;
     
-    addButton("Lance Les Dés !", vec2(x_center,  y_center+80), 'throw_btn', throw_dice);
+    addButton("Lance Les Dés !", vec2(x_center,  y_center+80), 'throw_btn', throw_dice_secu);
+
     onClick('dice', (dice) => 
         switch_status(dice))
 })
@@ -885,13 +930,13 @@ scene('result_phase', (combi)=>{
 
                     // reset parameters
                     level = 0;
+                    tuto = true;
                     max_round = 3;
                     max_dice = 5;
                     dice_type = 6;
                     magic_finger = false;
                     mf_count = 0;
-                    mf_max = 1;
-                    upgrades = ['round_up','dice_up','magic_finger','dice_type_3',];
+                    upgrades = ['round_up','dice_up','mf','mt','dice_type_3'];
                 }
 
                 const home_btn = addButton('Recommencer', vec2(x_center,y_center+80), 'home_btn', to_homescreen)
@@ -927,62 +972,127 @@ function get_upgrade(upgrade){
     if (upgrade == 'dice_type_3'){
         dice_type = 3;
     }
-    if (upgrade == 'magic_finger'){
+    if (upgrade == 'mf'){
         magic_finger = true;
-        upgrades.splice(2,0,'magic_finger_up');
     }
-    if (upgrade == 'magic_finger_up')
-        mf_max = 2;
+    if (upgrade == 'mt')
+        console.log('hello');
 }
 
 scene('buy_phase', ()=>{
 
     set_background();
     custom_cursor();
+    onUpdate( () => 
+        get('choice').forEach(c => {
+            
+            c.animate(
+                'scale', [vec2(6.3), vec2(6.5)], {
+                    duration : 0.4,
+                    direction : 'ping-pong',
+                    loop : true
+                }),
+            c.animate('angle', [-5,5], {
+                    duration : 1.3,
+                    direction : 'ping-pong',
+                    loop : true
+                })
+            })
+        )
 
-    const choice_01 = add([
-        rect(250,250),
-        pos(x_center-180,y_center),
-        color(80,10,80),
-        anchor('center'),
-        layer("obj"),
-        area(),
-        'choice'
-    ]);
+    if (upgrades.length > 1) {
+        
+    loquace.script([
+                    `disableNextPrompt t Tiens, tu peux choisir un de ces deux bonus pour t'aider.`
+                ]   )
+            
+        const choice_01 = add([
+            sprite('bonus_'+upgrades[0]),
+            pos(x_center-150,y_center),
+            anchor('center'),
+            scale(6.5),
+            animate(),
+            layer("obj"),
+            area(),
+            'choice'
+        ]);
 
-    choice_01.add([
-        text(upgrades[0]),
-        anchor('center')
-    ])
+        const desc_01 = add([
+            text(upgrades[0]),
+            pos(x_center-150, y_center + 150),
+            color(255,0,0),
+            anchor('center')
+        ])
 
-    const choice_02 = add([
-        rect(250,250),
-         pos(x_center+180,y_center),
-        color(180,80,180),
-        anchor('center'),
-        layer("obj"),
-        area(),
-        'choice'        
-    ])
+        const choice_02 = add([
+            sprite('bonus_'+upgrades[1]),
+            pos(x_center+150,y_center),
+            scale(6.5),
+            anchor('center'),
+            animate(),
+            layer("obj"),
+            area(),
+            'choice'        
+        ])
 
-    choice_02.add([
-        text(upgrades[1]),
-        anchor('center')
-    ])
+        const desc_02 =add([
+            text(upgrades[1]),
+            pos(x_center+150,y_center + 150),
+            color(255,0,0),
+            anchor('center')
+        ])
 
-    choice_01.onClick(()=>{
-        get_upgrade(upgrades[0])
-        upgrades.splice(0,1)
-        round = 1; 
-        go('dice_phase');
-    });
+        choice_01.onClick(()=>{
+            get_upgrade(upgrades[0])
+            upgrades.splice(0,1)
+            round = 1; 
+            go('dice_phase');
+        });
 
-    choice_02.onClick(()=>{
-        get_upgrade(upgrades[1])
-        upgrades.splice(1,1)
-        round = 1;
-        go('dice_phase');
-    });
+        choice_02.onClick(()=>{
+            get_upgrade(upgrades[1])
+            upgrades.splice(1,1)
+            round = 1;
+            go('dice_phase');
+        });
+    } else if (upgrades.length == 1) {
+
+        loquace.script([
+                    `disableNextPrompt t Je n'ai plus qu'un seul bonus à te proposer, mais tu devrais avoir toutes les cartes en main ... enfin les dés, pour réussir`
+                ]   )
+            
+        const choice_01 = add([
+            sprite('bonus_'+upgrades[0]),
+            pos(x_center,y_center),
+            anchor('center'),
+            scale(5),
+            layer("obj"),
+            area(),
+            'choice'
+        ]);
+
+        const desc_01 = add([
+            text(upgrades[0]),
+            pos(x_center, y_center + 150),
+            anchor('center')
+        ])
+    } else {
+        loquace.script([
+                    `disableNextPrompt t Je n'ai plus de bonus à te proposer. Réfléchis bien tu as tout pour réussir`
+                ])
+
+        addButton('Retente ta chance', vec2(x_center, y_center+80),'retry_btn',to_dice_phase);
+    }
+
+    get('choice').forEach(c => {
+        c.onHoverUpdate(() => {
+            custom_cursor(hover = true);
+            });
+
+        c.onHoverEnd(() => {
+            custom_cursor();
+            });
+    })
 })
 
 go('start');

@@ -250,10 +250,9 @@ let max_round = 3;
 let max_dice = 5;
 let dice_type = 6;
 let magic_finger = false;
-let mf_count = 0;
 let magic_throw = false;
-let mt_count = 0;
 let upgrades = ['round_up','dice_up','mf','mt','dice_type_3'];
+let upgrade_pos = [350, 400];
 let sprites = [];
 let d6_sprites = ['dice1','dice2','dice3','dice4','dice5','dice6'];
 let d3_sprites = ['d3_dice1','d3_dice2','d3_dice3'];
@@ -515,17 +514,103 @@ function get_possible_values(n_face) {
 
     let current_values = get_current_values();
     let possible_values = [...Array(n_face).keys()];
-    possible_values = possible_values.filter(x => current_values.includes(x));
-
+    possible_values = possible_values.filter(x => !current_values.includes(x));
+    
+    text_update()
+    
     return possible_values
 }
 
 function throw_dice() {
 
     if (round == 1) {
+
         let throw_btn = get('throw_btn')[0];
         destroy(throw_btn);
         addButton('Lance les Dés', vec2(x_center-180,y_center+100), 'throw_btn', throw_dice);
+
+        if (magic_finger == true) {
+
+            const mf_icon = add([
+                sprite('bonus_mf'),
+                pos(350, y_center+155),
+                anchor('center'),
+                area(),
+                scale(1.3,1.3),
+                animate(),
+                'bonus_ico',
+                'mf_btn'
+            ]);
+
+            mf_icon.onClick(() => {
+                
+                if (get('selected').length == 1){ //magic_finger == true & get('selected').length == 1 & 
+                
+                    let dice_pos = [];
+                    get('selected').forEach(dice => {
+                        dice_pos.push(dice.pos)
+                    });
+                
+                    for (let i = 0; i <= dice_type - 1 ; i++) {
+                        color_picker(i, dice_pos[0].x, dice_pos[0].y)
+                        }
+                    
+                    destroy(mf_icon);
+
+                } else {
+                    message_error('Tu dois sélectionner un dé pour utiliser ce pouvoir.')
+                }
+            })
+        }
+        
+        if (magic_throw == true) {
+
+            let x_pos = 350;
+            if (get('bonus_ico').length > 0){
+                x_pos = 400;
+            }
+
+            const mt_icon = add([
+                sprite('bonus_mt'),
+                pos(x_pos, y_center+155),
+                anchor('center'),
+                area(),
+                scale(1.3,1.3),
+                animate(),
+                'bonus_ico',
+                'mt_btn'
+            ]);
+
+            mt_icon.onClick(() => {
+            
+                let possible_value = get_possible_values(dice_type);
+                let dice_pos = [];
+
+                get('dice').forEach(dice => {
+                    dice.tag('selected')
+                    dice_pos.push(dice.pos)
+                    destroy(dice)
+                });
+
+                dice_pos.forEach(p => {
+                    create_dice(dice_type, p.x, p.y, possible_value[Math.floor(Math.random()*possible_value.length)])
+                });
+
+                text_update();
+                destroy(mt_icon);
+            })
+
+        }
+
+        get('bonus_ico').forEach(b => {
+            b.onHoverUpdate(() => {
+                custom_cursor(hover = true);
+                });
+
+            b.onHoverEnd(() => {
+                custom_cursor();
+                });
+            })
     }
 
     const selected_dices = get('selected');
@@ -535,8 +620,15 @@ function throw_dice() {
         
     }
 
+    if (round == max_round) {
+        get('bonus_ico').forEach(b => {
+            destroy(b)
+        })
+    }
+
     if (round <= max_round){
 
+        // First Round Initialisation
         if (get('dice').length == 0) {
 
             if (tuto == true) {
@@ -557,8 +649,8 @@ function throw_dice() {
                     "enableNextPrompt t Oh non ! Tu n'a aucun dé identiques.",
                     "enableNextPrompt t Clique sur les dés pour les sélectionner",
                     'disableNextPrompt t Puis appuie sur le bouton "Lance les dés" pour retirer les dés sélectionnés',
-                ])} 
-                } else {
+                ])}
+            } else {
 
                 for (let i = 0; i < max_dice; i++) {
 
@@ -575,39 +667,29 @@ function throw_dice() {
 
             let dice_pos = [];
             selected_dices.forEach(dice => {
-            
                 dice_pos.push(dice.pos)
             });
 
-            if (magic_finger == true & selected_dices.length == 1 & mf_count < 1){
-
-                for (let i = 0; i <= dice_type - 1 ; i++) {
-                    color_picker(i, dice_pos[0].x, dice_pos[0].y)
-                    }
-                    mf_count += 1;
-                    
-            } else {
-
-                selected_dices.forEach(dice => {
-                    destroy(dice)
-                })
-                
-                dice_pos.forEach(p => {
+            selected_dices.forEach(dice => {
+                destroy(dice)
+            })
+            
+            dice_pos.forEach(p => {
                 create_dice(dice_type, p.x, p.y)
-
             });
+
         }
-    }
+
         text_update();
-        return round+=1
+        // round+=1;
 
     } else {
 
-        message_error(`Oh non, tu n'as plus de Lancer !`)
+        message_error(`Oh non, tu n'as plus de Lancer !`);
     }
 }
 
-function  add_text_shadow(text_tag,input_text) {
+function add_text_shadow(text_tag,input_text) {
 
     let pos_x = get(text_tag)[0].pos.x + 2;
     let pos_y = get(text_tag)[0].pos.y + 2;
@@ -627,7 +709,7 @@ function  add_text_shadow(text_tag,input_text) {
 
 function text_update(round_update = true, combi_update = true) {
 
-    let current_values = get_current_values()
+    let current_values = get_current_values();
     combi = check_combi(current_values);
 
     if (combi_update == true){
@@ -639,18 +721,18 @@ function text_update(round_update = true, combi_update = true) {
         if (combi >= level+1) {
                 
             const current_combi = add([
-                    pos(width-150,y_center+155),
-                    anchor('right'),
-                    text(`Dés identiques : ${combi}/${level+1}`,{
-                    transform: (idx, ch) => ({
-                        pos: vec2(wave(-4, 4, time()*3  + idx * 0.5), 0),
-                        scale: wave(1, 1.2, time() * 3 + idx),
-                        angle: wave(-9, 9, time() * 3 + idx),
-                        }),
+                pos(width-150,y_center+155),
+                anchor('right'),
+                text(`Dés identiques : ${combi}/${level+1}`,{
+                transform: (idx, ch) => ({
+                    pos: vec2(wave(-4, 4, time()*3  + idx * 0.5), 0),
+                    scale: wave(1, 1.2, time() * 3 + idx),
+                    angle: wave(-9, 9, time() * 3 + idx),
                     }),
-                    color(0,0,0),
-                    opacity(.6),
-                    layer("shadow"),
+                }),
+                color(0,0,0),
+                opacity(.6),
+                layer("shadow"),
                 'info_txt',
                 'combi_txt'
                 ]);
@@ -686,6 +768,8 @@ function text_update(round_update = true, combi_update = true) {
         };
 
     if (round_update == true) {
+
+        round+=1;
 
         get('round_txt').forEach(txt => {
                 destroy(txt)
@@ -792,7 +876,7 @@ function color_picker (i, pos_x, pos_y) {
             current_values.push(dice.value);
         });
 
-        text_update(round_update = false);
+        text_update();
 
     })
 }
@@ -847,9 +931,27 @@ scene('start', ()=>{
     
 });
 
-// Prevents clicking on a button of the next scene accidently
+
 function throw_dice_secu() {
+
+    // Prevents clicking on a button of the next scene accidently
     setTimeout(() => {throw_dice()}, 1)
+
+    // if (magic_finger == true) {
+
+
+    //     const mf_icon = add([
+    //         sprite('bonus_mf'),
+    //         pos(350, y_center+155),
+    //         anchor('center'),
+    //         area(),
+    //         scale(1.3,1.3),
+    //         animate(),
+    //         'bonus_ico',
+    //         'mf_btn'
+    //     ])
+    // }
+
 }
 
 scene('dice_phase', ()=>{
@@ -879,8 +981,8 @@ scene('dice_phase', ()=>{
         ]);
     
     round = 1;
-    mf_count = 0;
-    mt_count = 0;
+    
+    
     
     addButton("Lance Les Dés !", vec2(x_center,  y_center+80), 'throw_btn', throw_dice_secu);
 
@@ -935,7 +1037,7 @@ scene('result_phase', (combi)=>{
                     max_dice = 5;
                     dice_type = 6;
                     magic_finger = false;
-                    mf_count = 0;
+                    magic_throw = false;
                     upgrades = ['round_up','dice_up','mf','mt','dice_type_3'];
                 }
 
@@ -951,15 +1053,7 @@ scene('result_phase', (combi)=>{
         };
 
         addButton('Retente ta chance', vec2(x_center, y_center+80),'retry_btn',to_buy_phase);
-    }  
-
-    // const combi_text = add([
-    //     pos(x_center, 200),
-    //     text(result_text),
-    //     anchor('center'),
-    //     layer("ui"),
-    //     'result_txt'
-    // ]);
+    }
 })
 
 function get_upgrade(upgrade){
@@ -976,7 +1070,7 @@ function get_upgrade(upgrade){
         magic_finger = true;
     }
     if (upgrade == 'mt')
-        console.log('hello');
+        magic_throw = true;
 }
 
 scene('buy_phase', ()=>{

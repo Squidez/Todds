@@ -516,12 +516,15 @@ function get_possible_values(n_face) {
     let possible_values = [...Array(n_face).keys()];
     possible_values = possible_values.filter(x => !current_values.includes(x));
     
-    text_update()
-    
+    text_update();
+    round+=1;
+
     return possible_values
 }
 
 function throw_dice() {
+
+    console.log(round)
 
     if (round == 1) {
 
@@ -544,7 +547,7 @@ function throw_dice() {
 
             mf_icon.onClick(() => {
                 
-                if (get('selected').length == 1){ //magic_finger == true & get('selected').length == 1 & 
+                if (get('selected').length == 1){
                 
                     let dice_pos = [];
                     get('selected').forEach(dice => {
@@ -555,6 +558,8 @@ function throw_dice() {
                         color_picker(i, dice_pos[0].x, dice_pos[0].y)
                         }
                     
+                    text_update();
+                    round+=1;
                     destroy(mf_icon);
 
                 } else {
@@ -596,7 +601,6 @@ function throw_dice() {
                     create_dice(dice_type, p.x, p.y, possible_value[Math.floor(Math.random()*possible_value.length)])
                 });
 
-                text_update();
                 destroy(mt_icon);
             })
 
@@ -637,11 +641,12 @@ function throw_dice() {
         
                 for (let i = 0; i < max_dice; i++) {
                 
-                let dice_offset = i - Math.floor(max_dice/2);
+                    let dice_offset = i - Math.floor(max_dice/2);
 
                 if (max_dice%2 == 0) {
                     dice_offset = i - max_dice/2 + 0.5;
                     }
+
                 const x = x_center + dice_offset*84;
                 dice = create_dice(dice_type, x,200,i);
 
@@ -681,7 +686,7 @@ function throw_dice() {
         }
 
         text_update();
-        // round+=1;
+        round+=1;
 
     } else {
 
@@ -769,8 +774,6 @@ function text_update(round_update = true, combi_update = true) {
 
     if (round_update == true) {
 
-        round+=1;
-
         get('round_txt').forEach(txt => {
                 destroy(txt)
             })
@@ -826,6 +829,7 @@ function create_dice(n_face, pos_x, pos_y, dice_value = Math.floor(Math.random()
         go('result_phase', combi)
     }
     addButton("Terminer La Manche", vec2(x_center+180,y_center+100), 'end_btn',to_result_phase)
+    text_update(round_update = false, combi_update = true);
 }
 
 function color_picker (i, pos_x, pos_y) {
@@ -876,7 +880,7 @@ function color_picker (i, pos_x, pos_y) {
             current_values.push(dice.value);
         });
 
-        text_update();
+        // text_update();
 
     })
 }
@@ -933,25 +937,8 @@ scene('start', ()=>{
 
 
 function throw_dice_secu() {
-
     // Prevents clicking on a button of the next scene accidently
     setTimeout(() => {throw_dice()}, 1)
-
-    // if (magic_finger == true) {
-
-
-    //     const mf_icon = add([
-    //         sprite('bonus_mf'),
-    //         pos(350, y_center+155),
-    //         anchor('center'),
-    //         area(),
-    //         scale(1.3,1.3),
-    //         animate(),
-    //         'bonus_ico',
-    //         'mf_btn'
-    //     ])
-    // }
-
 }
 
 scene('dice_phase', ()=>{
@@ -979,11 +966,8 @@ scene('dice_phase', ()=>{
         layer("ui"),
         'level_txt'
         ]);
-    
+
     round = 1;
-    
-    
-    
     addButton("Lance Les Dés !", vec2(x_center,  y_center+80), 'throw_btn', throw_dice_secu);
 
     onClick('dice', (dice) => 
@@ -1000,7 +984,6 @@ scene('result_phase', (combi)=>{
     set_background();
     onUpdate(() => loquace_cursor_update());
 
-
     let result_text = '';
 
     if (combi >= level+1){
@@ -1009,14 +992,12 @@ scene('result_phase', (combi)=>{
             loquace.script([
                 `disableNextPrompt t Bravo tu as réussi, mais sera-tu capable d'obtenir \nau moins ${level + 2} dés de la même couleur ?`
             ])
-            // result_text = `Bravo tu as réussi,\nmais sera-tu capable d'obtenir \nau moins ${level + 2} dés de la même couleur ?`
 
             if (combi > level + 1) {
                 
                 loquace.script([
                 `disableNextPrompt t Bravo tu as réussi,mais auras-tu à nouveau assez de chance \npour obtenir au moins ${level + 2}?`
             ]   )
-                // result_text = `Bravo tu as réussi,\nmais auras-tu à nouveau assez de chance \npour obtenir au moins ${level + 2}?`            
             }
 
             addButton('Continuer', vec2(x_center, y_center+120), 'continue_btn',to_dice_phase);
@@ -1139,14 +1120,12 @@ scene('buy_phase', ()=>{
         choice_01.onClick(()=>{
             get_upgrade(upgrades[0])
             upgrades.splice(0,1)
-            round = 1; 
             go('dice_phase');
         });
 
         choice_02.onClick(()=>{
             get_upgrade(upgrades[1])
             upgrades.splice(1,1)
-            round = 1;
             go('dice_phase');
         });
     } else if (upgrades.length == 1) {

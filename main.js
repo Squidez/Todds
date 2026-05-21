@@ -279,11 +279,11 @@ let max_dice = 5;
 let dice_type = 6;
 let upgrades = ['round_up','dice_up','mf','mt','dice_type_3'];
 let upgrades_desc = {
-    'round_up' : '[wavy]LANCER SUPPLÉMENTAIRE[/wavy]\nTu obtiens un lancer supplémentaire par manche',
-    'dice_up' : '[wavy]DE SUPPLEMENTAIRE[/wavy]\nTu obtiens un dé supplémentaire par manche',
-    'mf' : '[wavy]UN PETIT COUP DE BAGUETTE[/wavy]\nTu peux changer la couleur d\'un dé (une fois par manche)',
-    'mt' : '[wavy]UN PETIT COUP DE CHAPEAU[/wavy]\nTu relances tous les dés avec une couleur qui n\'est pas actuelllement présente (une fois par manche)',
-    'dice_type_3' : '[wavy]UN PETIT COUP DE PINCEAU[/wavy]\nLes dés n\'ont plus que 3 couleurs',
+    'round_up' : '[wavey]LANCER SUPPLÉMENTAIRE[/wavey]\nTu obtiens un lancer supplémentaire par manche',
+    'dice_up' : '[wavey]DE SUPPLEMENTAIRE[/wavey]\nTu obtiens un dé supplémentaire par manche',
+    'mf' : '[wavey]UN PETIT COUP DE BAGUETTE[/wavey]\nTu peux changer la couleur d\'un dé (une fois par manche)',
+    'mt' : '[wavey]UN PETIT COUP DE CHAPEAU[/wavey]\nTu relances tous les dés avec une couleur qui n\'est pas actuelllement présente (une fois par manche)',
+    'dice_type_3' : '[wavey]UN PETIT COUP DE PINCEAU[/wavey]\nLes dés n\'ont plus que 3 couleurs',
     };
 let magic_finger = false;
 let magic_throw = false;
@@ -326,21 +326,19 @@ loquace.characters({
     });
 
 // Update the cursor, when it hovers a dialog
+//
 function loquace_cursor_update() {
 
     if (get('loquaceDialog').length == 1) {
-
-        // Get the dialog object
-        const loquace_diag =  get('loquaceDialog')[0]
 
         if (get('diag_area') == 0) {
 
             // Creates an collidable area for the dialog
             const diag_area = add([
                 rect(width - 120 - 2*30, 55),
-                color(255,0,0),
-                pos(loquace_diag.pos),
-                opacity(0),
+                color(255,255,0),
+                pos(160,470), // end position of the diaglog after animation
+                opacity(0), // make it invisible
                 area(),
                 'diag_area'
             ])
@@ -354,7 +352,6 @@ function loquace_cursor_update() {
         // Destroy the area when there is no dialog
         get('diag_area').forEach(d_a => {destroy(d_a)})
     }
-    
 }
 
 // Creates a cursor with custom sprites
@@ -584,8 +581,8 @@ function addButton(
         custom_cursor();
     });
 
+    // Add custom tag
     if (tag != '') {
-
         btn.tag(tag)
     }
 
@@ -593,6 +590,7 @@ function addButton(
     // it runs once when the object is clicked
     btn.onClick(()=>{
         play('click', {volume : 0.3,});
+        // Calls function only if the button is active
         if (btn.tags.includes('active')) {
             call_fct();
         }});
@@ -767,9 +765,22 @@ function throw_dice() {
                 loquace.script([
                     "enableNextPrompt t Oh non ! Tu n'a aucun dé identiques.",
                     "enableNextPrompt t Clique sur les dés pour les sélectionner",
-                    'disableNextPrompt t Puis appuie sur le bouton "Lance les dés" pour retirer les dés sélectionnés',
+                    `disableNextPrompt t Puis appuie sur le bouton [bold]Lance les dés[/bold] pour lancer les dés sélectionnés`,
                 ])
                 
+                onUpdate(() => {
+
+                    if(get('loquaceDialog').length == 1){
+                    const diag_text = get('loquaceDialog')[0]['children'][1]
+                    diag_text.textStyles = {
+                    "bold": (idx, ch) => ({
+                    scale: wave(1.3, 1.4, time() * 5),
+                    color: rgb(0,0,0)
+                    }), 
+                }}})
+                
+
+
                 // Create the dices in a centered position
                 for (let i = 0; i < max_dice; i++) {
                 
@@ -1188,9 +1199,9 @@ scene('dice_phase', ()=>{
         pos(x_center,65),
         anchor('center'),
         text(
-            `[wavy]Lance au moins [rainbow]${level+1}[/rainbow] identiques ![/wavy]`,{
+            `[wavey]Lance au moins [rainbow]${level+1}[/rainbow] identiques ![/wavey]`,{
             styles: {
-                "wavy": (idx, ch) => ({
+                "wavey": (idx, ch) => ({
                     pos: vec2(0, wave(-4, 4, time() * .5 + idx * 0.5)),
                     }),
                 "rainbow": (idx, ch) => ({
@@ -1401,7 +1412,7 @@ scene('buy_phase', ()=>{
                  width : 300,
                  align : 'center',
                   styles: {
-                    "wavy": (idx, ch) => ({
+                    "wavey": (idx, ch) => ({
                     pos: vec2(0, wave(-2, 2, time() + idx * 0.5)),
                     })}
                 }),
@@ -1432,7 +1443,7 @@ scene('buy_phase', ()=>{
                  width : 300,
                  align : 'center',
                   styles: {
-                    "wavy": (idx, ch) => ({
+                    "wavey": (idx, ch) => ({
                     pos: vec2(0, wave(-2, 2, time() + idx * 0.5)),
                     })}
                 }),
@@ -1484,7 +1495,7 @@ scene('buy_phase', ()=>{
                  width : 300,
                  align : 'center',
                   styles: {
-                    "wavy": (idx, ch) => ({
+                    "wavey": (idx, ch) => ({
                     pos: vec2(0, wave(-2, 2, time() + idx * 0.5)),
                     })}
                 }),

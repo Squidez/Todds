@@ -19,7 +19,7 @@ Le jeu se joue entièrement à la souris. Les joueur·euses peuvent sécletionne
 Le jeu est directement jouable dans le navigateur, sur sa page <a href="https://squidez.itch.io/todds">itch.io</a> dédiée. <br>
 Autrement il suffit d'exécuter localement le fichier ``index.html``. *Kaplay* est importé directement dans le script ``main.js`` et **loquace** depuis le fichier source du code situé dans ``src/kaplay-loquace.js``
 
-Le jeu utilise encore la version *v3001* de *Kaplay*. La nouvelle version *v4000* a été publié pendant le développement du jeu. Malheureusement elle entre en conflit avec *loquace* en faisant apparaître les pop-up de texte sous le *layout* du jeu.
+**note:** Le jeu utilise encore la version *v3001* de *Kaplay*. La nouvelle version *v4000* a été publié pendant le développement du jeu. Malheureusement elle entre en conflit avec *loquace* en faisant apparaître les pop-up de texte sous le *layout* du jeu.
 
 
 ## Crédits

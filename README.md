@@ -28,4 +28,6 @@ Sauf indication contraire, l'ensemble des assets graphiques, sonores et la musiq
 L'animation des dés est dérivée du pack <a target="_blank" href="https://dani-maccari.itch.io/cute-dice">Cute Dice</a> par Dani Maccari.<br>
 La police d'écriture utilisée dans le jeu est <a href = "https://fonts.google.com/specimen/Schoolbell"> <i>Schoolbell</i></a> designée par *Font Diner*.
 
+Aucun LLM et aucune IA générative n'ont été utilisé lors du développement.
+
 
